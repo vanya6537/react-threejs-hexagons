@@ -4,6 +4,9 @@
   "description": "",
   "keywords": [],
   "main": "src/index.js",
+  "engines": {
+    "node": "14.2.x"
+  },
   "dependencies": {
     "react": "16.10.2",
     "react-dom": "16.10.2",
