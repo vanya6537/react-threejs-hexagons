@@ -43,11 +43,13 @@ export default class Animation {
     }
   }
 
-  animateGrid(time, render) {
+  animateGrid(time) {
     // console.log(this.staggerArray);
     // this.timer += delta;
     this.staggerArray.forEach((value, index) => {
-      value.position.y = Config.geometry.bottom.height * Math.cos(time*3 + index / 2)*3/4
+      let multiplier = Math.abs(Math.tan((time/3 + index / 2)))
+
+      value.position.y = Config.geometry.bottom.height * Math.min(multiplier*3/4,Config.geometry.bottom.height/4);
       // value.position.x = value.position.x +Math.tan(time)
       // if (index<this.staggerArray.length/2){
       //   value.layers.toggle(1);
