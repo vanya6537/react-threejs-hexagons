@@ -9,19 +9,7 @@ export default class Animation {
     // Initialize animation mixer
   }
 
-  createGrid(mesh,scene, radius) {
-    function disposeMaterial(obj) {
-
-      if (obj.material) {
-
-        obj.material.dispose()
-
-      }
-
-    }
-
-    scene.traverse(disposeMaterial)
-    scene.children.length = 0
+  createGrid(mesh, scene, radius) {
     let radiusVal = Config.geometry.top.radiusVal
     let distance = radiusVal * Math.sqrt(3)
     for (let i = 0; i < radius; i++) {
@@ -33,11 +21,6 @@ export default class Animation {
         new_mesh.position.y = 20 - (new_mesh.position.x + new_mesh.position.z) / 3
         this.staggerArray.push(new_mesh)
         scene.add(new_mesh)
-        // console.log(new_mesh.layers)
-        // if (i < 2) {
-          //   console.log('enabled?')
-          // new_mesh.layers.enable(1)
-        // }
       }
 
     }
@@ -47,14 +30,11 @@ export default class Animation {
     // console.log(this.staggerArray);
     // this.timer += delta;
     this.staggerArray.forEach((value, index) => {
-      let multiplier = Math.abs(Math.tan((time/3 + index / 2)))
+      let multiplier = Math.sin(time) * Math.cos(index + time)
 
-      value.position.y = Config.geometry.bottom.height * Math.min(multiplier*3/4,Config.geometry.bottom.height/4);
-      // value.position.x = value.position.x +Math.tan(time)
-      // if (index<this.staggerArray.length/2){
-      //   value.layers.toggle(1);
-      // render();
-      // }
+      value.position.y = Config.geometry.bottom.height * 3 / 5 * multiplier
+
+
     })
   }
 };

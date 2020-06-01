@@ -14,96 +14,77 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 class App extends Component {
   componentDidMount() {
     var BLOOM_SCENE = 1, time = 0
+    //bloom
     let bloomLayer = new THREE.Layers()
     bloomLayer.set(BLOOM_SCENE)
-    // let Helpers = Helpers();
 
-    let onToggleTimeOut = 0, onToggleTimeOutConst = 500
-
+    //scene init
     let scene = new THREE.Scene()
-    const dist = Config.animation.grid.radius*Config.geometry.top.radiusVal*Math.sqrt(3)/2
+    //grid radius changes in dependence of window size
+    Config.animation.grid.radius = Math.max(window.innerWidth, window.innerHeight) / (Config.geometry.top.radiusVal * 10)
+    const dist = Config.animation.grid.radius * Config.geometry.top.radiusVal * Math.sqrt(3) / 2
+    Config.camera.posX = dist
+    Config.camera.posZ = dist
+    Config.camera.posY = dist * 4 / 5
 
+    Config.controls.target.x = dist
+    Config.controls.target.z = dist
+    Config.controls.target.y = 0
+
+    //camera
     let camera = new THREE.PerspectiveCamera(Config.camera.fov, window.innerWidth / window.innerHeight, Config.camera.near, Config.camera.far)
-    camera.position.set(dist, Config.camera.posY, dist)
+    camera.position.set(Config.camera.posX, Config.camera.posY, Config.camera.posZ)
 
-    // camera.position.set(dist, Config.camera.posY, dist)
-    // camera.lookAt(new THREE.Vector3(dist,-1,dist))
-    // camera.rotateOnAxis(new THREE.Vector3(1,1,1),90)
-    let renderer = new THREE.WebGLRenderer()//{ antialias: true })
-    renderer.setClearColor(new THREE.Color('black'))
+    //renderer
+    let renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setClearColor(new THREE.Color('white'))
     renderer.setPixelRatio(window.devicePixelRatio) // For retina
     renderer.toneMapping = THREE.ReinhardToneMapping
     renderer.toneMappingExposure = Config.bloom.exposure
-
-    // renderer.shadowMap.enabled = true
-    // renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.setSize(window.innerWidth, window.innerHeight)
 
-
+    //
     this.mount.appendChild(renderer.domElement)
 
+    //camera control
     let controls = new OrbitControls(camera, renderer.domElement)
-    controls.center=new THREE.Vector3(dist, Config.camera.posY, dist)
-    controls.target.set(dist*0.8,-1,dist);
-    // controls
+    controls.center = new THREE.Vector3(dist, Config.camera.posY, dist)
+    controls.target.set(Config.controls.target.x, Config.controls.target.y, Config.controls.target.z)
     controls.maxPolarAngle = Math.PI * 0.5
     controls.minDistance = 1
     controls.maxDistance = 1000
     controls.update()
-// Ambient
-    let ambientLight = new THREE.AmbientLight(Config.ambientLight.color)
-    ambientLight.position.y = 30
-    ambientLight.visible = Config.ambientLight.enabled
 
-    // Point light
-    let pointLight = new THREE.PointLight(Config.pointLight.color, Config.pointLight.intensity, Config.pointLight.distance)
-    pointLight.position.set(Config.pointLight.x, Config.pointLight.y, Config.pointLight.z)
-    pointLight.visible = Config.pointLight.enabled
+    // Ambient light
+    let ambientLight = new THREE.AmbientLight(Config.ambientLight.color)
+    ambientLight.position.set(0, 100, 0)
+    ambientLight.intensity = 3
+    ambientLight.visible = Config.ambientLight.enabled
 
     // Directional light
     let directionalLight = new THREE.DirectionalLight(Config.directionalLight.color, Config.directionalLight.intensity)
     directionalLight.position.set(Config.directionalLight.x, Config.directionalLight.y, Config.directionalLight.z)
     directionalLight.visible = Config.directionalLight.enabled
+    directionalLight.target.position.set(Config.directionalLight.target.x, Config.directionalLight.target.y, Config.directionalLight.target.z)
 
-    // Shadow map
-    directionalLight.castShadow = Config.shadow.enabled
-    directionalLight.shadow.bias = Config.shadow.bias
-    directionalLight.shadow.camera.near = Config.shadow.near
-    directionalLight.shadow.camera.far = Config.shadow.far
-    directionalLight.shadow.camera.left = Config.shadow.left
-    directionalLight.shadow.camera.right = Config.shadow.right
-    directionalLight.shadow.camera.top = Config.shadow.top
-    directionalLight.shadow.camera.bottom = Config.shadow.bottom
-    directionalLight.shadow.mapSize.width = Config.shadow.mapWidth
-    directionalLight.shadow.mapSize.height = Config.shadow.mapHeight
+    //add lights to scene
+    scene.add(ambientLight)
+    scene.add(directionalLight)
+    scene.add(directionalLight.target)
 
-    // Shadow camera helper
-    let directionalLightHelper = new THREE.CameraHelper(directionalLight.shadow.camera)
-    directionalLightHelper.visible = Config.shadow.helperEnabled
+    //axes helper
+    let axesHelper = new THREE.AxesHelper(1000)
+    scene.add(axesHelper)
 
-    // Hemisphere light
-    let hemiLight = new THREE.HemisphereLight(Config.hemiLight.color, Config.hemiLight.groundColor, Config.hemiLight.intensity)
-    hemiLight.position.set(Config.hemiLight.x, Config.hemiLight.y, Config.hemiLight.z)
-    hemiLight.visible = Config.hemiLight.enabled
-
-    // scene.add(ambientLight)
-    // scene.add(directionalLight)
-    // scene.add(directionalLightHelper)
-    // scene.add(hemiLight)
-    // scene.add(pointLight)
-
-    let top_material = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('rgb(192,192,192)')
-
-    })
-    let bottom_material = new THREE.MeshBasicMaterial({
-      color: Config.mesh.material.bottom.color,
-    })
-    // set composer
-    let bloomComposer = new EffectComposer(renderer)
+    //render magic
     let renderScene = new RenderPass(scene, camera)
+    let bloomComposer = new EffectComposer(renderer)
     let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), Config.bloom.bloomStrength, Config.bloom.bloomRadius, Config.bloom.bloomThreshold)
+    bloomComposer.renderToScreen = false
+    bloomComposer.addPass(renderScene)
+    bloomComposer.addPass(bloomPass)
 
+    //bloom material
     let shader = new THREE.ShaderMaterial({
       uniforms: {
         baseTexture: { value: null },
@@ -113,16 +94,12 @@ class App extends Component {
       fragmentShader: Config.shader.fragmentShader,
       defines: {}
     })
+
     let finalPass = new ShaderPass(
-      shader, 'baseTexture',
+      shader, 'baseTexture'
     )
 
-    // let physicPass = new ShaderPass(PhysicalMaterial)
-    finalPass.needsSwap = true
 
-    bloomComposer.renderToScreen = false
-    bloomComposer.addPass(renderScene)
-    bloomComposer.addPass(bloomPass)
     let finalComposer = new EffectComposer(renderer)
     finalComposer.addPass(renderScene)
     finalComposer.addPass(finalPass)
@@ -130,14 +107,17 @@ class App extends Component {
 
 
     //Create material
+    let bottom_material = new THREE.MeshBasicMaterial({
+      color: Config.mesh.material.bottom.color
+    })
 
-    // let top_material = new THREE.MeshPhysicalMaterial({
-    //   color: Config.mesh.material.top.color
-      // flatShading: THREE.FlatShading,
-      // roughness: 1,
-      // metalness: 0
-      // side: THREE.DoubleSide
-    // })
+    let top_material = new THREE.MeshPhysicalMaterial({
+      color: Config.mesh.material.top.color,
+      flatShading: true,
+      roughness: 0.7,
+      metalness: 0.3,
+      side: THREE.DoubleSide
+    })
 
     const darkMaterial = new THREE.MeshBasicMaterial({ color: 'black' })
     let materials = {}
@@ -207,7 +187,7 @@ class App extends Component {
 
       // console.log(intersects);
 
-      if (intersects.length > 0 && !onToggleTimeOut) {
+      if (intersects.length > 0) {
         let object = intersects[0].object
         console.log(object.material.color)
         object.layers.toggle(BLOOM_SCENE)
@@ -215,34 +195,16 @@ class App extends Component {
       }
     }
 
-    function darkenNonBloomed(obj) {
-
-      if (obj.isMesh && bloomLayer.test(obj.layers) === false) {
-
-        materials[obj.uuid] = obj.material
-        obj.material = darkMaterial
-
-      }
-
-    }
-
-    function restoreMaterial(obj) {
-
-      if (materials[obj.uuid]) {
-
-        obj.material = materials[obj.uuid]
-        // console.log(obj.material.color)
-        delete materials[obj.uuid]
-
-      }
-
-    }
 
     function render() {
-      scene.traverse(darkenNonBloomed)
+      // scene.traverse(darkenNonBloomed)
+      renderer.setClearColor(new THREE.Color('black'))
+
       bloomComposer.render()
       // renderer.render(scene,camera);
-      scene.traverse(restoreMaterial)
+      // scene.traverse(restoreMaterial)
+      renderer.setClearColor(new THREE.Color('white'))
+
       finalComposer.render()
 
     }
@@ -254,36 +216,25 @@ class App extends Component {
 
     var gui = new GUI()
 
-    // gui.add( Config.ambientLight, 'color', [ Config.ambientLight.color,Config.ambientLight.color2 ] ).onChange( function ( value ) {
-    //
-    //   ambientLight.color=value;
-    //
-    //   render();
-    //
-    // } );
     var folder = gui.addFolder('Bloom Parameters')
-
     folder.add(Config.bloom, 'exposure', 0.1, 2).onChange(function(value) {
 
       renderer.toneMappingExposure = Math.pow(value, 4.0)
       render()
 
     })
-
     folder.add(Config.bloom, 'bloomThreshold', 0.0, 1.0).onChange(function(value) {
 
       bloomPass.threshold = Number(value)
       render()
 
     })
-
     folder.add(Config.bloom, 'bloomStrength', 0.0, 10.0).onChange(function(value) {
 
       bloomPass.strength = Number(value)
       render()
 
     })
-
     folder.add(Config.bloom, 'bloomRadius', 0.0, 1.0).step(0.01).onChange(function(value) {
 
       bloomPass.radius = Number(value)
@@ -291,9 +242,55 @@ class App extends Component {
 
     })
 
+    var LightTargetFolder = gui.addFolder('Light Target')
+    var LightFolder = gui.addFolder('Light')
+
+    LightTargetFolder.add(Config.directionalLight.target, 'x', 0, 2000).onChange(function(value) {
+
+      directionalLight.target.position.x = Number(value)
+      render()
+
+    })
+    LightTargetFolder.add(Config.directionalLight.target, 'y', 0, 2000).onChange(function(value) {
+
+      directionalLight.target.position.y = Number(value)
+      render()
+
+    })
+    LightTargetFolder.add(Config.directionalLight.target, 'z', 0, 2000).onChange(function(value) {
+
+      directionalLight.target.position.z = Number(value)
+      render()
+
+    })
+    LightFolder.add(Config.directionalLight, 'intensity', 0.0, 3.0).step(0.01).onChange(function(value) {
+
+      directionalLight.intensity = Number(value)
+      render()
+
+    })
+    LightFolder.add(Config.directionalLight, 'x', -2000, 2000, 40).onChange(function(value) {
+
+      directionalLight.position.x = Number(value)
+      render()
+
+    })
+    LightFolder.add(Config.directionalLight, 'y', -2000, 2000, 40).onChange(function(value) {
+
+      directionalLight.position.y = Number(value)
+      render()
+
+    })
+    LightFolder.add(Config.directionalLight, 'z', -2000, 2000, 40).onChange(function(value) {
+
+      directionalLight.position.z = Number(value)
+      render()
+
+    })
+
 
     var animate = function() {
-      time+=0.01
+      time += 0.01
       animation.animateGrid(time)
       render()
       requestAnimationFrame(animate)
