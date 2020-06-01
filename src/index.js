@@ -21,7 +21,7 @@ class App extends Component {
     //scene init
     let scene = new THREE.Scene()
     //grid radius changes in dependence of window size
-    Config.animation.grid.radius = Math.max(window.innerWidth, window.innerHeight) / (Config.geometry.top.radiusVal * 10)
+    // Config.animation.grid.radius = Math.max(window.innerWidth, window.innerHeight) / (Config.geometry.top.radiusVal * 10)
     const dist = Config.animation.grid.radius * Config.geometry.top.radiusVal * Math.sqrt(3) / 2
     Config.camera.posX = dist
     Config.camera.posZ = dist

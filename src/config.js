@@ -51,7 +51,7 @@ void main() {
   },
   animation: {
     grid: {
-      radius: 10
+      radius: 22
     }
   },
   mesh: {
