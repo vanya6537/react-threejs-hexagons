@@ -21,7 +21,6 @@ class App extends Component {
     //scene init
     let scene = new THREE.Scene()
     //grid radius changes in dependence of window size
-    // Config.animation.grid.radius = Math.max(window.innerWidth, window.innerHeight) / (Config.geometry.top.radiusVal * 10)
     const dist = Config.animation.grid.radius * Config.geometry.top.radiusVal * Math.sqrt(3) / 2
     Config.camera.posX = dist
     Config.camera.posZ = dist
@@ -43,7 +42,6 @@ class App extends Component {
     renderer.toneMappingExposure = Config.bloom.exposure
     renderer.setSize(window.innerWidth, window.innerHeight)
 
-    //
     this.mount.appendChild(renderer.domElement)
 
     //camera control
@@ -103,7 +101,6 @@ class App extends Component {
     let finalComposer = new EffectComposer(renderer)
     finalComposer.addPass(renderScene)
     finalComposer.addPass(finalPass)
-    // bloomLayer.set(1)
 
 
     //Create material
@@ -126,12 +123,7 @@ class App extends Component {
     // Create and place geo in scene
     let bottom_geometry = new THREE.CylinderGeometry(Config.geometry.bottom.radiusVal, Config.geometry.top.radiusVal, Config.geometry.bottom.height, Config.geometry.bottom.radialSegments)
     let top_geometry = new THREE.CylinderGeometry(Config.geometry.top.radiusVal, Config.geometry.top.radiusVal, Config.geometry.top.height, Config.geometry.top.radialSegments)
-
-    // console.log(bottom_geometry)
-    // console.log(top_geometry)
-
     let top_mesh = new THREE.Mesh(top_geometry, top_material)
-    // top_mesh.layers.enable(1)
     let bottom_mesh = new THREE.Mesh(bottom_geometry, bottom_material)
     bottom_mesh.layers.enable(BLOOM_SCENE)
 
@@ -141,22 +133,11 @@ class App extends Component {
     let group_mesh = new THREE.Group()
     group_mesh.add(bottom_mesh)
     group_mesh.add(top_mesh)
-    // group_mesh.receiveShadow = Config.shadow.enabled
-    // group_mesh.scale.multiplyScalar(0.2);
-    // console.log(group_mesh);
-
-    // group_mesh.scale.multiplyScalar(Config.model.scale);
-    //Create grid and animate it
-    // camera.layers.disableAll()
     let animation = new Animation(scene)
-    // console.log(animation);
+    animation.createGrid(group_mesh, scene, Config.animation.grid.radius)
 
     let raycaster = new THREE.Raycaster()
-
-    animation.createGrid(group_mesh, scene, Config.animation.grid.radius)
-    // render()
     let mouse = new THREE.Vector2()
-    // console.log(scene.children);
     window.onresize = function() {
 
       let width = window.innerWidth
@@ -197,22 +178,15 @@ class App extends Component {
 
 
     function render() {
-      // scene.traverse(darkenNonBloomed)
       renderer.setClearColor(new THREE.Color('black'))
-
       bloomComposer.render()
-      // renderer.render(scene,camera);
-      // scene.traverse(restoreMaterial)
       renderer.setClearColor(new THREE.Color('white'))
 
       finalComposer.render()
 
     }
 
-    // window.addEventListener('click', onDocumentMouseClick, false)
     renderer.domElement.addEventListener('click', (event) => onDocumentMouseClick(event), false)
-    // renderer.domElement.addEventListener('mouseleave', (event) => this.onMouseLeave(event), false);
-    // renderer.domElement.addEventListener('mouseover', (event) => this.onMouseOver(event), false);
 
     var gui = new GUI()
 
