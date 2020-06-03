@@ -27,39 +27,25 @@ export default class Animation {
   }
 
   animateGrid(time) {
-    // console.log(this.staggerArray);
-    // this.timer += delta;
+    const timeMultiplier = 1 / 4
+    // time*=timeMultiplier
+    let row = 0, col = 0
+    const center_index = Config.animation.grid.radius / 2
+
     this.staggerArray.forEach((value, index) => {
-      let multiplier = Math.sin(time) * Math.cos(index + time)
+      row += 1
+      if (row === Config.animation.grid.radius) {
+        row = 0
+        col += 1
+      }
+      let dist = Config.animation.grid.radius - Math.sqrt(Math.pow(center_index - row, 2) + Math.pow(center_index - col, 2))
 
-      value.position.y = Config.geometry.bottom.height * 3 / 5 * multiplier
+      // let dist = center_index*2-r
+      let multiplier = Math.abs(Math.sin(time * 2) * Math.cos(Math.sqrt(time) * dist / 5 + 1))
 
+      // value.position.y = Math.min(Config.geometry.bottom.height, Config.geometry.bottom.height * multiplier)
+      value.position.y = Config.geometry.bottom.height * multiplier
 
     })
   }
 };
-// export default class Animation {
-//   constructor(obj, clip) {
-//     // Scene that the clip will be applied to
-//     this.obj = obj;
-//
-//     // Initialize animation mixer
-//     this.mixer = new THREE.AnimationMixer(this.obj);
-//
-//     // Simple animation player
-//     this.playClip(clip);
-//   }
-//
-//   playClip(clip) {
-//     this.action = this.mixer.clipAction(clip);
-//
-//     this.action.play();
-//   }
-//
-//   // Call update in loop
-//   update(delta) {
-//     if(this.mixer) {
-//       this.mixer.update(delta);
-//     }
-//   }
-// }
