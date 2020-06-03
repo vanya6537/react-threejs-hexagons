@@ -39,7 +39,8 @@ class App extends Component {
     renderer.setClearColor(new THREE.Color('white'))
     renderer.setPixelRatio(window.devicePixelRatio) // For retina
     renderer.toneMapping = THREE.ReinhardToneMapping
-    renderer.toneMappingExposure = Config.bloom.exposure
+    renderer.toneMappingExposure = Math.pow(Config.bloom.exposure, 4.0)
+
     renderer.setSize(window.innerWidth, window.innerHeight)
 
     this.mount.appendChild(renderer.domElement)
