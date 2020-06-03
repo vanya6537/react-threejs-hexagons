@@ -42,7 +42,7 @@ void main() {
 }
 `
   }, bloom: {
-    bloomStrength: 0.6, bloomRadius: 0.1, bloomThreshold: 0, exposure: 1
+    bloomStrength: 0.6, bloomRadius: 0.1, bloomThreshold: 1, exposure: 1.2
 
   },
   geometry: {
