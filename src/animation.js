@@ -31,7 +31,7 @@ export default class Animation {
     // time*=timeMultiplier
     let row = 0, col = 0
     const center_index = Config.animation.grid.radius / 2
-
+    time += 2 * Math.PI
     this.staggerArray.forEach((value, index) => {
       row += 1
       if (row === Config.animation.grid.radius) {
@@ -41,10 +41,10 @@ export default class Animation {
       let dist = Config.animation.grid.radius - Math.sqrt(Math.pow(center_index - row, 2) + Math.pow(center_index - col, 2))
 
       // let dist = center_index*2-r
-      let multiplier = Math.abs(Math.sin(time * 2) * Math.cos(Math.sqrt(time) * dist / 5 + 1))
+      let multiplier = Math.sin(time * 2) * Math.cos(Math.sqrt(time) * dist / 5)
 
       // value.position.y = Math.min(Config.geometry.bottom.height, Config.geometry.bottom.height * multiplier)
-      value.position.y = Config.geometry.bottom.height * multiplier
+      value.position.y = Config.geometry.bottom.height * multiplier * 2
 
     })
   }
