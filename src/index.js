@@ -14,38 +14,39 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 class App extends Component {
   componentDidMount() {
     var BLOOM_SCENE = 1, time = 0
-    //bloom
+
+    // Bloom Layer
     let bloomLayer = new THREE.Layers()
     bloomLayer.set(BLOOM_SCENE)
 
-    //scene init
+    // Scene init
     let scene = new THREE.Scene()
-    //grid radius changes in dependence of window size
+
+    // Position of camera changes in dependence of grid radius
     const dist = Config.animation.grid.radius * Config.geometry.top.radiusVal * Math.sqrt(3) / 2
     Config.camera.posX = dist
     Config.camera.posZ = dist
     Config.camera.posY = dist * 4 / 5
-
     Config.controls.target.x = dist
     Config.controls.target.z = dist
     Config.controls.target.y = 0
 
-    //camera
+    // Camera
     let camera = new THREE.PerspectiveCamera(Config.camera.fov, window.innerWidth / window.innerHeight, Config.camera.near, Config.camera.far)
     camera.position.set(Config.camera.posX, Config.camera.posY, Config.camera.posZ)
 
-    //renderer
+    // Renderer
     let renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setClearColor(new THREE.Color('white'))
-    renderer.setPixelRatio(window.devicePixelRatio) // For retina
+    // For retina
+    renderer.setPixelRatio(window.devicePixelRatio)
     renderer.toneMapping = THREE.ReinhardToneMapping
     renderer.toneMappingExposure = Math.pow(Config.bloom.exposure, 4.0)
-
     renderer.setSize(window.innerWidth, window.innerHeight)
 
     this.mount.appendChild(renderer.domElement)
 
-    //camera control
+    // Camera OrbitControl
     let controls = new OrbitControls(camera, renderer.domElement)
     controls.center = new THREE.Vector3(dist, Config.camera.posY, dist)
     controls.target.set(Config.controls.target.x, Config.controls.target.y, Config.controls.target.z)
@@ -66,16 +67,16 @@ class App extends Component {
     directionalLight.visible = Config.directionalLight.enabled
     directionalLight.target.position.set(Config.directionalLight.target.x, Config.directionalLight.target.y, Config.directionalLight.target.z)
 
-    //add lights to scene
+    // Add all lights to scene
     scene.add(ambientLight)
     scene.add(directionalLight)
     scene.add(directionalLight.target)
 
-    //axes helper
+    // I use Axes helper
     let axesHelper = new THREE.AxesHelper(1000)
     scene.add(axesHelper)
 
-    //render magic
+    // Render magic - we have 2 layers now, with bloom and without it.
     let renderScene = new RenderPass(scene, camera)
     let bloomComposer = new EffectComposer(renderer)
     let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), Config.bloom.bloomStrength, Config.bloom.bloomRadius, Config.bloom.bloomThreshold)
@@ -83,7 +84,7 @@ class App extends Component {
     bloomComposer.addPass(renderScene)
     bloomComposer.addPass(bloomPass)
 
-    //bloom material
+    // Creating Bloom material
     let shader = new THREE.ShaderMaterial({
       uniforms: {
         baseTexture: { value: null },
@@ -98,13 +99,13 @@ class App extends Component {
       shader, 'baseTexture'
     )
 
-
+    // Final renderer object
     let finalComposer = new EffectComposer(renderer)
     finalComposer.addPass(renderScene)
     finalComposer.addPass(finalPass)
 
 
-    //Create material
+    // Create materials for hexagons
     let bottom_material = new THREE.MeshBasicMaterial({
       color: Config.mesh.material.bottom.color
     })
@@ -117,26 +118,30 @@ class App extends Component {
       side: THREE.DoubleSide
     })
 
-    const darkMaterial = new THREE.MeshBasicMaterial({ color: 'black' })
-    let materials = {}
+    // Used for rendering without whitening - now it's over
+    // const darkMaterial = new THREE.MeshBasicMaterial({ color: 'black' })
+    // let materials = {}
 
 
-    // Create and place geo in scene
+    // Create and place Meshes in scene
     let bottom_geometry = new THREE.CylinderGeometry(Config.geometry.bottom.radiusVal, Config.geometry.top.radiusVal, Config.geometry.bottom.height, Config.geometry.bottom.radialSegments)
     let top_geometry = new THREE.CylinderGeometry(Config.geometry.top.radiusVal, Config.geometry.top.radiusVal, Config.geometry.top.height, Config.geometry.top.radialSegments)
     let top_mesh = new THREE.Mesh(top_geometry, top_material)
     let bottom_mesh = new THREE.Mesh(bottom_geometry, bottom_material)
+    // Bottom Mesh will shine!
     bottom_mesh.layers.enable(BLOOM_SCENE)
-
     top_mesh.position.y = Config.geometry.bottom.height - Config.geometry.top.height / 2
 
-
+    // Composite Hexagons
     let group_mesh = new THREE.Group()
     group_mesh.add(bottom_mesh)
     group_mesh.add(top_mesh)
+
+    // Creating a Grid and animate
     let animation = new Animation(scene)
     animation.createGrid(group_mesh, scene, Config.animation.grid.radius)
 
+    //Try to play with click events
     let raycaster = new THREE.Raycaster()
     let mouse = new THREE.Vector2()
     window.onresize = function() {
