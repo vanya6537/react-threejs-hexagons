@@ -9,7 +9,7 @@
     "react-dom": "16.10.2",
     "react-scripts": "3.2.0",
     "react-three-fiber": "3.0.1",
-    "three": "0.109.0"
+    "three": "0.125.0"
   },
   "devDependencies": {
     "typescript": "3.3.3"
